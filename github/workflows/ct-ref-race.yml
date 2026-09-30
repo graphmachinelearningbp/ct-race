@@ -1,0 +1,35 @@
+name: ct-ref-race
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "create (spike S3) o patch (candado alternativo)"
+        default: "create"
+      races:
+        description: "carreras validas"
+        default: "100"
+permissions:
+  contents: write
+jobs:
+  race:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v6
+      - name: Carrera de refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODE: ${{ inputs.mode }}
+          RACES: ${{ inputs.races }}
+        run: python3 race_refs.py "$GITHUB_REPOSITORY"
+      - name: Resumen
+        if: always()
+        run: |
+          f=$(ls ct_ref_*.jsonl 2>/dev/null | head -n 1)
+          if [ -z "$f" ]; then echo "Sin resultados" >> "$GITHUB_STEP_SUMMARY"; exit 0; fi
+          {
+            echo '```json'
+            head -n 1 "$f"
+            tail -n 1 "$f"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
