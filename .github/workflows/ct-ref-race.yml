@@ -14,11 +14,16 @@ jobs:
   race:
     runs-on: ubuntu-latest
     timeout-minutes: 340
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v6
+      - name: Descargar el script (con gh, sin acciones)
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/contents/race_refs.py?ref=$GITHUB_SHA" \
+            -H "Accept: application/vnd.github.raw+json" > race_refs.py
+          head -n 3 race_refs.py
       - name: Carrera de refs
         env:
-          GH_TOKEN: ${{ github.token }}
           MODE: ${{ inputs.mode }}
           RACES: ${{ inputs.races }}
         run: python3 race_refs.py "$GITHUB_REPOSITORY"
